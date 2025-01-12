@@ -41,7 +41,7 @@ if __name__ == '__main__':
     transforms.Resize(target_size),  # Resize the image to the target size
     transforms.ToTensor()           # Convert the image to a tensor (C, H, W)
 ])
-	path = 'C:/Users/Admin/Documents/HUST/DIP/blurred_sharp/sharp/split/'
+	path = 'C:/Users/Hieu/OneDrive/Desktop/Kì 1 năm 3/Digital image processing/Mid-term/blurred_sharp/blurred_sharp/resized_sharp'
 	for i in os.listdir(path): 
 		img_path = os.path.join(path, i)
 		# print(img_path) 
@@ -57,11 +57,19 @@ if __name__ == '__main__':
 		model.test()
 		visuals = model.get_current_visuals()
 		# Convert visuals['fake_B'] and visuals['real_A'] to tensors with the correct shape
-		tensor_fake = torch.tensor(visuals['fake_B']).permute(2, 0, 1).unsqueeze(0).float()  # Shape: (1, C, H, W)
-		tensor_real = torch.tensor(visuals['real_A']).permute(2, 0, 1).unsqueeze(0).float()  # Shape: (1, C, H, W)
-		tensor_real_B = torch.tensor(img).unsqueeze(0).float()
-		avgSSIM += ssim(tensor_fake, tensor_real)
-		avgPSNR += psnr(tensor_fake, tensor_real,data_range=255.0)
+		tensor_fake = torch.tensor(visuals['fake_B']).permute(2, 0, 1).unsqueeze(0).float()  # Generated image
+
+		# Load the corresponding ground truth image from the path directory
+		img_path = os.path.join(path, os.listdir(path)[i])  # Ensure order consistency
+		ground_truth_img = Image.open(img_path)
+		ground_truth_img = transform(ground_truth_img)
+
+		# Convert ground truth image to tensor
+		tensor_ground_truth = ground_truth_img.unsqueeze(0).float()
+
+		# Calculate metrics between generated image and ground truth
+		avgSSIM += ssim(tensor_fake, tensor_ground_truth)
+		avgPSNR += psnr(tensor_fake, tensor_ground_truth, data_range=255.0)
 
 		img_path = model.get_image_paths()
 		print('process image... %s' % img_path)
